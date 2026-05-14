@@ -10,6 +10,8 @@
 // #define DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS
 
 #include <doctest.h>
+#include "communication/can/can_helpers.hpp"
+#include <limits>
 
 using std::cout;
 using std::endl;
@@ -192,5 +194,52 @@ TEST_SUITE("") {
 
         std::cout << step_cb(step_dir_active, dir_pin, input_pos, turns_per_step) << '\n';
         std::cout << step_cb_new(step_dir_active, dir_pin, steps, turns_per_step) << '\n';
+    }
+}
+
+TEST_SUITE("can_helpers_signal_operations") {
+    TEST_CASE("signal struct overloads round trip with scaling") {
+        can_Message_t msg{};
+        const can_Signal_t signal{0, 16, true, 2.0f, 1.0f};
+
+        can_setSignal<int16_t>(msg, 25, signal);
+        CHECK(msg.buf[0] == 0x0C);
+        CHECK(msg.buf[1] == 0x00);
+        CHECK(can_getSignal<int16_t>(msg, signal) == doctest::Approx(25.0f));
+
+        can_setSignal<int16_t>(msg, 1, signal);
+        CHECK(can_getSignal<int16_t>(msg, signal) == doctest::Approx(1.0f));
+
+        can_setSignal<int16_t>(msg, -3, signal);
+        CHECK(can_getSignal<int16_t>(msg, signal) == doctest::Approx(-3.0f));
+    }
+
+    TEST_CASE("big endian signed extraction with scaling") {
+        can_Message_t msg{};
+        can_setSignal<int16_t>(msg, static_cast<int16_t>(-150), 48, 16, false);
+
+        CHECK(can_getSignal<int16_t>(msg, 48, 16, false, 0.1f, 0.0f) == doctest::Approx(-15.0f));
+    }
+
+    TEST_CASE("set signal updates only selected bit range") {
+        can_Message_t msg{};
+        std::fill(std::begin(msg.buf), std::end(msg.buf), 0xFF);
+
+        can_setSignal<uint8_t>(msg, 0x55, 16, 8, true);
+
+        CHECK(msg.buf[0] == 0xFF);
+        CHECK(msg.buf[1] == 0xFF);
+        CHECK(msg.buf[2] == 0x55);
+        CHECK(msg.buf[3] == 0xFF);
+    }
+
+    TEST_CASE("scaled encoding at int16 upper bound") {
+        can_Message_t msg{};
+        const can_Signal_t signal{0, 16, true, 1.0f, 0.0f};
+
+        can_setSignal<int16_t>(msg, std::numeric_limits<int16_t>::max(), signal);
+        CHECK(msg.buf[0] == 0xFF);
+        CHECK(msg.buf[1] == 0x7F);
+        CHECK(can_getSignal<int16_t>(msg, signal) == doctest::Approx(static_cast<float>(std::numeric_limits<int16_t>::max())));
     }
 }
