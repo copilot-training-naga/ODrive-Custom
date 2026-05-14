@@ -42,6 +42,7 @@ This lesson teaches you how to leverage GitHub Copilot for modern C++ developmen
 - [RTOS & Hardware Patterns](#3-rtos--hardware-patterns-10-min)
 - [Hands-On: Generate Components](#4-hands-on-generate-components-16-min)
 - [Unit Testing with /tests](#5-unit-testing-with-tests)
+- [C++ Architecture Documentation](cpp-architecture-documentation.md)
 - [Creating Embedded C++ Personas](#creating-embedded-c-personas)
 - [Using Personas in Copilot](#using-personas-in-copilot)
 - [Practice Exercises](#practice-exercises)
@@ -2550,6 +2551,7 @@ Requirements:
 - State Machines: `src-ODrive/Firmware/MotorControl/axis.cpp`
 - HAL Abstraction: `src-ODrive/Firmware/Drivers/STM32/`
 - Error Handling: `src-ODrive/Firmware/MotorControl/encoder.cpp`
+- C++ Architecture Documentation (UML + edge cases): [cpp-architecture-documentation.md](cpp-architecture-documentation.md)
 
 ---
 
