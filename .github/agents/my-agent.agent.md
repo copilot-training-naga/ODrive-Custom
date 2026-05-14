@@ -5,7 +5,7 @@
 # For format details, see: https://gh.io/customagents/config
 
 name: CPP Expert
-description:
+description: This agents is for documenation
 ---
 
 # My Agent
