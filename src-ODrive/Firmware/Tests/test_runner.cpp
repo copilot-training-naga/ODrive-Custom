@@ -10,6 +10,7 @@
 // #define DOCTEST_CONFIG_VOID_CAST_EXPRESSIONS
 
 #include <doctest.h>
+#include "communication/can/can_helpers.hpp"
 
 using std::cout;
 using std::endl;
@@ -192,5 +193,36 @@ TEST_SUITE("") {
 
         std::cout << step_cb(step_dir_active, dir_pin, input_pos, turns_per_step) << '\n';
         std::cout << step_cb_new(step_dir_active, dir_pin, steps, turns_per_step) << '\n';
+    }
+}
+
+TEST_SUITE("can_helpers_additional") {
+    TEST_CASE("signal struct overloads round trip with scaling") {
+        can_Message_t msg{};
+        const can_Signal_t signal{0, 16, true, 2.0f, 1.0f};
+
+        can_setSignal<int16_t>(msg, 25, signal);
+        CHECK(can_getSignal<int16_t>(msg, signal) == doctest::Approx(25.0f));
+    }
+
+    TEST_CASE("big endian signed extraction with scaling") {
+        can_Message_t msg{};
+        const int16_t raw_value = -150;
+        std::memcpy(msg.buf, &raw_value, sizeof(raw_value));
+        std::reverse(std::begin(msg.buf), std::end(msg.buf));
+
+        CHECK(can_getSignal<int16_t>(msg, 48, 16, false, 0.1f, 0.0f) == doctest::Approx(-15.0f));
+    }
+
+    TEST_CASE("set signal updates only selected bit range") {
+        can_Message_t msg{};
+        std::fill(std::begin(msg.buf), std::end(msg.buf), 0xFF);
+
+        can_setSignal<uint8_t>(msg, 0x55, 16, 8, true);
+
+        CHECK(msg.buf[0] == 0xFF);
+        CHECK(msg.buf[1] == 0xFF);
+        CHECK(msg.buf[2] == 0x55);
+        CHECK(msg.buf[3] == 0xFF);
     }
 }
