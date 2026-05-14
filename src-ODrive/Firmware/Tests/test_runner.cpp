@@ -202,14 +202,14 @@ TEST_SUITE("can_helpers_additional") {
         const can_Signal_t signal{0, 16, true, 2.0f, 1.0f};
 
         can_setSignal<int16_t>(msg, 25, signal);
+        CHECK(msg.buf[0] == 0x0C);
+        CHECK(msg.buf[1] == 0x00);
         CHECK(can_getSignal<int16_t>(msg, signal) == doctest::Approx(25.0f));
     }
 
     TEST_CASE("big endian signed extraction with scaling") {
         can_Message_t msg{};
-        const int16_t raw_value = -150;
-        std::memcpy(msg.buf, &raw_value, sizeof(raw_value));
-        std::reverse(std::begin(msg.buf), std::end(msg.buf));
+        can_setSignal<int16_t>(msg, static_cast<int16_t>(-150), 48, 16, false);
 
         CHECK(can_getSignal<int16_t>(msg, 48, 16, false, 0.1f, 0.0f) == doctest::Approx(-15.0f));
     }
