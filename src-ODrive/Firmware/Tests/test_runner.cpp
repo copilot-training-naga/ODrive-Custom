@@ -196,7 +196,7 @@ TEST_SUITE("") {
     }
 }
 
-TEST_SUITE("can_helpers_additional") {
+TEST_SUITE("can_helpers_signal_operations") {
     TEST_CASE("signal struct overloads round trip with scaling") {
         can_Message_t msg{};
         const can_Signal_t signal{0, 16, true, 2.0f, 1.0f};
@@ -224,5 +224,15 @@ TEST_SUITE("can_helpers_additional") {
         CHECK(msg.buf[1] == 0xFF);
         CHECK(msg.buf[2] == 0x55);
         CHECK(msg.buf[3] == 0xFF);
+    }
+
+    TEST_CASE("scaled encoding near int16 upper bound") {
+        can_Message_t msg{};
+        const can_Signal_t signal{0, 16, true, 0.5f, 0.0f};
+
+        can_setSignal<int16_t>(msg, 16383, signal);
+        CHECK(msg.buf[0] == 0xFE);
+        CHECK(msg.buf[1] == 0x7F);
+        CHECK(can_getSignal<int16_t>(msg, signal) == doctest::Approx(16383.0f));
     }
 }
